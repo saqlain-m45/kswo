@@ -254,6 +254,23 @@ input[type='submit'] {
     margin-bottom: 0.3rem;
 }
 
+.payment-form-grid {
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.payment-form-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.payment-table-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
 .service-card {
     min-height: 190px;
 }
@@ -576,5 +593,34 @@ th {
 
     .home-layout .grid-3 {
         grid-template-columns: 1fr;
+    }
+
+    .payment-accounts-page .payment-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .payment-accounts-page .payment-form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .payment-accounts-page .payment-form-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .payment-accounts-page .payment-accounts-table th,
+    .payment-accounts-page .payment-accounts-table td {
+        padding: 0.65rem;
+    }
+
+    .payment-accounts-page .payment-table-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .payment-accounts-page .payment-table-actions .btn {
+        width: 100%;
+        text-align: center;
     }
 }

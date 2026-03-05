@@ -70,10 +70,10 @@ $activePage = 'Payment Accounts';
 $navType = 'admin';
 require_once __DIR__ . '/../includes/header.php';
 ?>
-<div class="container dashboard-shell">
+<div class="container dashboard-shell payment-accounts-page">
     <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
     <section class="dashboard-content form-wrap" style="max-width:none;">
-    <section class="card">
+    <section class="card payment-form-card">
         <h2>Payment Accounts (Super Admin)</h2>
         <p class="notice">This module is visible only to super admin and controls donation destination accounts for Easypaisa, JazzCash, and Bank.</p>
 
@@ -92,7 +92,7 @@ require_once __DIR__ . '/../includes/header.php';
             <input type="hidden" name="id" value="<?= (int)($editRow['id'] ?? 0) ?>">
             <input type="hidden" name="action" value="save">
             <input type="hidden" name="existing_icon_path" value="<?= htmlspecialchars($editRow['icon_path'] ?? '') ?>">
-            <div class="form-grid">
+            <div class="form-grid payment-form-grid">
                 <div class="form-group">
                     <label>Method</label>
                     <select name="method" required>
@@ -113,7 +113,7 @@ require_once __DIR__ . '/../includes/header.php';
             <?php if (!empty($editRow['icon_path'])): ?>
                 <p style="margin:.5rem 0;"><strong>Current Icon:</strong> <img src="<?= page_url($editRow['icon_path']) ?>" alt="Method Icon" style="width:28px;height:28px;object-fit:contain;vertical-align:middle;"></p>
             <?php endif; ?>
-            <div style="display:flex;gap:.5rem;margin-top:.7rem;">
+            <div class="payment-form-actions">
                 <button class="btn btn-primary" type="submit">Save Account</button>
                 <a class="btn btn-muted" href="<?= page_url('admin/payment_accounts.php') ?>">Reset</a>
             </div>
@@ -121,10 +121,10 @@ require_once __DIR__ . '/../includes/header.php';
         <?php endif; ?>
     </section>
 
-    <section class="card" style="margin-top:1rem;">
+    <section class="card payment-table-card" style="margin-top:1rem;">
         <h3>Configured Accounts</h3>
         <div class="table-wrap">
-            <table>
+            <table class="payment-accounts-table">
                 <thead><tr><th>Icon</th><th>Method</th><th>Title</th><th>Number</th><th>Holder</th><th>Details</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody>
                 <?php if (!$accounts): ?>
@@ -146,12 +146,14 @@ require_once __DIR__ . '/../includes/header.php';
                         <td><?= htmlspecialchars($account['branch_info'] ?: '-') ?></td>
                         <td><span class="badge <?= (int)$account['is_active'] === 1 ? 'badge-success' : 'badge-warning' ?>"><?= (int)$account['is_active'] === 1 ? 'Active' : 'Inactive' ?></span></td>
                         <td>
+                            <div class="payment-table-actions">
                             <a class="btn btn-muted" href="<?= page_url('admin/payment_accounts.php?edit=' . (int)$account['id']) ?>">Edit</a>
                             <form method="post" action="" style="display:inline-block;">
                                 <input type="hidden" name="id" value="<?= (int)$account['id'] ?>">
                                 <input type="hidden" name="action" value="delete">
                                 <button class="btn" style="background:#fee2e2;color:#991b1b;" type="submit">Delete</button>
                             </form>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>
