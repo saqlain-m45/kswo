@@ -74,8 +74,7 @@ require_once __DIR__ . '/../includes/header.php';
     <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
     <section class="dashboard-content form-wrap" style="max-width:none;">
     <section class="card payment-form-card">
-        <h2>Payment Accounts (Super Admin)</h2>
-        <p class="notice">This module is visible only to super admin and controls donation destination accounts for Easypaisa, JazzCash, and Bank.</p>
+        <h2>Payment Accounts (Full Access)</h2>
 
         <?php if (!$hasTable): ?>
             <div class="notice" style="border-left-color:#c62828;background:#fef2f2;">`payment_accounts` table is missing. Import the latest database.sql.</div>
@@ -151,7 +150,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <form method="post" action="" style="display:inline-block;">
                                 <input type="hidden" name="id" value="<?= (int)$account['id'] ?>">
                                 <input type="hidden" name="action" value="delete">
-                                <button class="btn" style="background:#fee2e2;color:#991b1b;" type="submit">Delete</button>
+                                <button class="btn" style="background:#fee2e2;color:#991b1b;" type="submit" onclick="return confirm('Do you really want to delete this payment account?');">Delete</button>
                             </form>
                             </div>
                         </td>

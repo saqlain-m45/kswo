@@ -119,7 +119,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <form method="post" action="" style="display:inline-block;">
                                     <input type="hidden" name="id" value="<?= (int)$president['id'] ?>">
                                     <input type="hidden" name="action" value="delete">
-                                    <button class="btn" style="background:#fee2e2;color:#991b1b;" type="submit">Delete</button>
+                                    <button class="btn" style="background:#fee2e2;color:#991b1b;" type="submit" onclick="return confirm('Do you really want to delete this president record?');">Delete</button>
                                 </form>
                             </td>
                         </tr>

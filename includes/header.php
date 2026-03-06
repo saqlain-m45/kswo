@@ -14,7 +14,10 @@ $publicNav = [
 ];
 
 if (isset($_SESSION['user'])) {
-    $isAdminContext = in_array($_SESSION['user']['role'] ?? '', ['admin', 'super_admin'], true);
+    $role = $_SESSION['user']['role'] ?? '';
+    $designation = strtolower(trim((string)($_SESSION['user']['designation'] ?? '')));
+    $hasFullAccess = in_array($role, ['admin', 'super_admin'], true) || ($designation !== '' && strpos($designation, 'president') !== false);
+    $isAdminContext = $hasFullAccess;
     $publicNav['Dashboard'] = $isAdminContext ? page_url('admin/dashboard.php') : page_url('user/dashboard.php');
     $publicNav['Logout'] = page_url('logout.php');
 } else {
@@ -37,7 +40,11 @@ $adminNav = [
     'Settings' => page_url('admin/settings.php'),
 ];
 
-if (($_SESSION['user']['role'] ?? '') === 'super_admin') {
+$role = $_SESSION['user']['role'] ?? '';
+$designation = strtolower(trim((string)($_SESSION['user']['designation'] ?? '')));
+$hasFullAccess = in_array($role, ['admin', 'super_admin'], true) || ($designation !== '' && strpos($designation, 'president') !== false);
+
+if ($hasFullAccess) {
     $adminNav['Payment Accounts'] = page_url('admin/payment_accounts.php');
 }
 

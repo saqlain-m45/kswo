@@ -4,6 +4,47 @@ require_once __DIR__ . '/includes/functions.php';
 $errors = [];
 $success = '';
 
+function upload_registration_image(string $inputName, string $filePrefix): array
+{
+    if (!isset($_FILES[$inputName]) || !is_array($_FILES[$inputName])) {
+        return ['path' => null, 'error' => 'Please upload all required images.'];
+    }
+
+    $file = $_FILES[$inputName];
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        return ['path' => null, 'error' => 'Please upload all required images.'];
+    }
+
+    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+        return ['path' => null, 'error' => 'Failed to upload image. Please try again.'];
+    }
+
+    $maxSize = 5 * 1024 * 1024;
+    if (($file['size'] ?? 0) > $maxSize) {
+        return ['path' => null, 'error' => 'Each image must be 5MB or less.'];
+    }
+
+    $extension = strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+    if (!in_array($extension, $allowedExtensions, true)) {
+        return ['path' => null, 'error' => 'Allowed image types: jpg, jpeg, png, webp.'];
+    }
+
+    $uploadDir = __DIR__ . '/uploads/member-documents/';
+    if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+        return ['path' => null, 'error' => 'Unable to prepare upload directory.'];
+    }
+
+    $fileName = $filePrefix . '_' . date('YmdHis') . '_' . random_int(1000, 9999) . '.' . $extension;
+    $targetPath = $uploadDir . $fileName;
+
+    if (!move_uploaded_file((string)$file['tmp_name'], $targetPath)) {
+        return ['path' => null, 'error' => 'Unable to save uploaded image.'];
+    }
+
+    return ['path' => 'uploads/member-documents/' . $fileName, 'error' => null];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fullName = trim($_POST['full_name'] ?? '');
     $fatherName = trim($_POST['father_name'] ?? '');
@@ -49,15 +90,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($existing) {
                 $errors[] = 'User already exists with this email, phone, or CNIC.';
             } else {
-                $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-                $designation = 'Member';
-                $stmt = $db->prepare('INSERT INTO users (full_name, father_name, gender, ethnicity, dob, cnic, phone, email, designation, password_hash, role, membership_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "user", "pending")');
-                $stmt->bind_param('ssssssssss', $fullName, $fatherName, $gender, $ethnicity, $dob, $cnic, $phone, $email, $designation, $passwordHash);
+                $cnicFrontUpload = upload_registration_image('cnic_front_image', 'cnic_front');
+                if ($cnicFrontUpload['error']) {
+                    $errors[] = 'CNIC front image: ' . $cnicFrontUpload['error'];
+                }
 
-                if ($stmt->execute()) {
-                    $success = 'Registration submitted successfully. Please login after admin verification.';
+                $studentCardUpload = upload_registration_image('student_card_front_image', 'student_card_front');
+                if ($studentCardUpload['error']) {
+                    $errors[] = 'Student card front image: ' . $studentCardUpload['error'];
+                }
+
+                if ($errors) {
+                    if (!empty($cnicFrontUpload['path']) && file_exists(__DIR__ . '/' . $cnicFrontUpload['path'])) {
+                        unlink(__DIR__ . '/' . $cnicFrontUpload['path']);
+                    }
+                    if (!empty($studentCardUpload['path']) && file_exists(__DIR__ . '/' . $studentCardUpload['path'])) {
+                        unlink(__DIR__ . '/' . $studentCardUpload['path']);
+                    }
                 } else {
-                    $errors[] = 'Unable to register right now. Please try again.';
+                    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                    $designation = 'Member';
+                    $cnicFrontPath = $cnicFrontUpload['path'];
+                    $studentCardFrontPath = $studentCardUpload['path'];
+                    $stmt = $db->prepare('INSERT INTO users (full_name, father_name, gender, ethnicity, dob, cnic, phone, email, designation, password_hash, cnic_front_image_path, student_card_front_image_path, role, membership_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "user", "pending")');
+                    if (!$stmt) {
+                        if (file_exists(__DIR__ . '/' . $cnicFrontPath)) {
+                            unlink(__DIR__ . '/' . $cnicFrontPath);
+                        }
+                        if (file_exists(__DIR__ . '/' . $studentCardFrontPath)) {
+                            unlink(__DIR__ . '/' . $studentCardFrontPath);
+                        }
+                        $errors[] = 'Database schema is outdated. Please run latest SQL migration and try again.';
+                    } else {
+                        $stmt->bind_param('ssssssssssss', $fullName, $fatherName, $gender, $ethnicity, $dob, $cnic, $phone, $email, $designation, $passwordHash, $cnicFrontPath, $studentCardFrontPath);
+
+                        if ($stmt->execute()) {
+                            $success = 'Registration submitted successfully. Please login after admin verification.';
+                        } else {
+                            if (file_exists(__DIR__ . '/' . $cnicFrontPath)) {
+                                unlink(__DIR__ . '/' . $cnicFrontPath);
+                            }
+                            if (file_exists(__DIR__ . '/' . $studentCardFrontPath)) {
+                                unlink(__DIR__ . '/' . $studentCardFrontPath);
+                            }
+                            $errors[] = 'Unable to register right now. Please try again.';
+                        }
+                    }
                 }
             }
         }
@@ -83,7 +161,7 @@ require_once __DIR__ . '/includes/header.php';
                 <?= htmlspecialchars($success) ?>
             </div>
         <?php endif; ?>
-        <form id="registerForm" method="post" action="" novalidate>
+        <form id="registerForm" method="post" action="" enctype="multipart/form-data" novalidate>
             <div class="form-grid">
                 <div class="form-group"><label for="fullName">Full Name</label><input id="fullName" name="full_name" value="<?= htmlspecialchars($_POST['full_name'] ?? '') ?>" required></div>
                 <div class="form-group"><label for="fatherName">Father Name</label><input id="fatherName" name="father_name" value="<?= htmlspecialchars($_POST['father_name'] ?? '') ?>" required></div>
@@ -115,6 +193,14 @@ require_once __DIR__ . '/includes/header.php';
                     <label for="confirmPassword">Confirm Password</label>
                     <input type="password" id="confirmPassword" name="confirm_password" required>
                     <small class="field-error" id="confirmPasswordError"></small>
+                </div>
+                <div class="form-group">
+                    <label for="cnicFrontImage">CNIC Front Image</label>
+                    <input type="file" id="cnicFrontImage" name="cnic_front_image" accept=".jpg,.jpeg,.png,.webp,image/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="studentCardFrontImage">Student Card Front Image</label>
+                    <input type="file" id="studentCardFrontImage" name="student_card_front_image" accept=".jpg,.jpeg,.png,.webp,image/*" required>
                 </div>
             </div>
             <div style="margin-top:1rem;display:flex;gap:.6rem;align-items:center;">

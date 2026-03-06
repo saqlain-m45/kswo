@@ -40,10 +40,21 @@ function is_super_admin_user(): bool
     return (current_user()['role'] ?? '') === 'super_admin';
 }
 
+function is_president_user(): bool
+{
+    $designation = strtolower(trim((string)(current_user()['designation'] ?? '')));
+    return $designation !== '' && strpos($designation, 'president') !== false;
+}
+
+function has_full_access_user(): bool
+{
+    return is_admin_user() || is_president_user();
+}
+
 function require_admin_access(): void
 {
     require_login();
-    if (!is_admin_user()) {
+    if (!has_full_access_user()) {
         header('Location: ' . page_url('index.php'));
         exit;
     }
@@ -52,7 +63,7 @@ function require_admin_access(): void
 function require_super_admin(): void
 {
     require_login();
-    if (!is_super_admin_user()) {
+    if (!has_full_access_user()) {
         header('Location: ' . page_url('admin/dashboard.php'));
         exit;
     }

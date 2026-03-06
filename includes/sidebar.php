@@ -20,7 +20,11 @@ $adminItems = [
     ['label' => 'Logout', 'url' => page_url('logout.php')],
 ];
 
-if (($_SESSION['user']['role'] ?? '') === 'super_admin') {
+$role = $_SESSION['user']['role'] ?? '';
+$designation = strtolower(trim((string)($_SESSION['user']['designation'] ?? '')));
+$hasFullAccess = in_array($role, ['admin', 'super_admin'], true) || ($designation !== '' && strpos($designation, 'president') !== false);
+
+if ($hasFullAccess) {
     array_splice($adminItems, 5, 0, [['label' => 'Payment Accounts', 'url' => page_url('admin/payment_accounts.php')]]);
 }
 

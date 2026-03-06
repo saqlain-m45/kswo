@@ -5,7 +5,7 @@ $error = '';
 
 if (is_logged_in()) {
     $user = current_user();
-    if (in_array(($user['role'] ?? ''), ['admin', 'super_admin'], true)) {
+    if (has_full_access_user()) {
         header('Location: ' . page_url('admin/dashboard.php'));
     } else {
         header('Location: ' . page_url('user/dashboard.php'));
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Invalid credentials. Please try again.';
         } else {
             login_user($user);
-            if (in_array($user['role'], ['admin', 'super_admin'], true)) {
+            if (has_full_access_user()) {
                 header('Location: ' . page_url('admin/dashboard.php'));
             } else {
                 header('Location: ' . page_url('user/dashboard.php'));

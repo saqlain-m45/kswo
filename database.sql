@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
     cnic VARCHAR(15) NOT NULL UNIQUE,
     phone VARCHAR(20) NOT NULL UNIQUE,
     email VARCHAR(120) NOT NULL UNIQUE,
+    cnic_front_image_path VARCHAR(255) DEFAULT NULL,
+    student_card_front_image_path VARCHAR(255) DEFAULT NULL,
     designation VARCHAR(100) NOT NULL DEFAULT 'Member',
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('user','admin','super_admin') NOT NULL DEFAULT 'user',

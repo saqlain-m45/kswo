@@ -4,6 +4,8 @@ require_once __DIR__ . '/../includes/functions.php';
 
 require_admin_access();
 $db = get_db_connection();
+$successMessage = '';
+$errorMessage = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $db) {
     $action = $_POST['action'] ?? '';
@@ -20,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $db) {
         $designation = trim($_POST['designation'] ?? 'Member');
         $password = $_POST['password'] ?? '';
         $requestedRole = trim($_POST['role'] ?? 'user');
-        $roleToCreate = is_super_admin_user() && in_array($requestedRole, ['user', 'admin'], true) ? $requestedRole : 'user';
+        $roleToCreate = has_full_access_user() && in_array($requestedRole, ['user', 'admin'], true) ? $requestedRole : 'user';
 
         if ($fullName !== '' && $cnic !== '' && $phone !== '' && $email !== '' && strlen($password) >= 8 && cnic_valid($cnic) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $checkStmt = $db->prepare('SELECT id FROM users WHERE email = ? OR phone = ? OR cnic = ? LIMIT 1');
@@ -32,8 +34,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $db) {
                 $passwordHash = password_hash($password, PASSWORD_DEFAULT);
                 $insertStmt = $db->prepare('INSERT INTO users (full_name, father_name, gender, ethnicity, dob, cnic, phone, email, designation, password_hash, role, membership_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "verified")');
                 $insertStmt->bind_param('sssssssssss', $fullName, $fatherName, $gender, $ethnicity, $dob, $cnic, $phone, $email, $designation, $passwordHash, $roleToCreate);
-                $insertStmt->execute();
+                if ($insertStmt->execute()) {
+                    $successMessage = $roleToCreate === 'admin' ? 'Admin account created successfully.' : 'User created successfully.';
+                } else {
+                    $errorMessage = 'Unable to create account right now. Please try again.';
+                }
+            } else {
+                $errorMessage = 'Email, phone, or CNIC already exists.';
             }
+        } else {
+            $errorMessage = 'Please enter valid details. Password must be at least 8 characters and CNIC format should be 12345-1234567-1.';
         }
     }
 
@@ -43,7 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $db) {
         $newStatus = $action === 'approve' ? 'verified' : 'rejected';
         $stmt = $db->prepare('UPDATE users SET membership_status = ? WHERE id = ?');
         $stmt->bind_param('si', $newStatus, $memberId);
-        $stmt->execute();
+        if ($stmt->execute()) {
+            $successMessage = $action === 'approve' ? 'Member approved successfully.' : 'Member rejected successfully.';
+        } else {
+            $errorMessage = 'Unable to update member status right now.';
+        }
     }
 }
 
@@ -69,6 +83,9 @@ if ($search !== '') {
 
 $sql .= ' ORDER BY id DESC';
 $members = fetch_all($sql, $types, $params);
+$adminUsers = has_full_access_user()
+    ? fetch_all('SELECT id, full_name, email, phone, designation, created_at FROM users WHERE role = "admin" ORDER BY id DESC')
+    : [];
 
 $pageTitle = 'Members';
 $activePage = 'Members';
@@ -78,6 +95,42 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="container dashboard-shell">
     <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
     <section class="dashboard-content">
+    <?php if ($successMessage !== ''): ?>
+        <div class="notice" style="margin-bottom:1rem;background:#dcfce7;color:#166534;border-left:4px solid #22c55e;">
+            <?= htmlspecialchars($successMessage) ?>
+        </div>
+    <?php endif; ?>
+    <?php if ($errorMessage !== ''): ?>
+        <div class="notice" style="margin-bottom:1rem;background:#fee2e2;color:#991b1b;border-left:4px solid #ef4444;">
+            <?= htmlspecialchars($errorMessage) ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (has_full_access_user()): ?>
+    <section class="card" style="margin-bottom:1rem;">
+        <h3>Admin Accounts (Full Access)</h3>
+        <div class="table-wrap" style="margin-bottom:1rem;">
+            <table>
+                <thead><tr><th>Name</th><th>Designation</th><th>Email</th><th>Phone</th><th>Created</th></tr></thead>
+                <tbody>
+                    <?php if (!$adminUsers): ?>
+                        <tr><td colspan="5">No admin accounts found.</td></tr>
+                    <?php endif; ?>
+                    <?php foreach ($adminUsers as $adminUser): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($adminUser['full_name']) ?></td>
+                            <td><?= htmlspecialchars($adminUser['designation'] ?? 'Administrator') ?></td>
+                            <td><?= htmlspecialchars($adminUser['email']) ?></td>
+                            <td><?= htmlspecialchars($adminUser['phone']) ?></td>
+                            <td><?= htmlspecialchars(date('Y-m-d', strtotime((string)$adminUser['created_at']))) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <?php endif; ?>
+
     <section class="card" style="margin-bottom:1rem;">
         <h3>Create User / Office Holder</h3>
         <form method="post" action="" class="form-grid">
@@ -88,7 +141,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="form-group"><label>Phone</label><input name="phone" required></div>
             <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
             <div class="form-group"><label>Password</label><input type="password" name="password" minlength="8" required></div>
-            <?php if (is_super_admin_user()): ?>
+            <?php if (has_full_access_user()): ?>
                 <div class="form-group">
                     <label>Role</label>
                     <select name="role">
@@ -101,7 +154,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="form-group"><label>Date of Birth</label><input type="date" name="dob" value="2000-01-01"></div>
             <div class="form-group"><label>Father Name</label><input name="father_name" value="System"></div>
             <div class="form-group"><label>Ethnicity</label><input name="ethnicity" value="Khattak"></div>
-            <div style="grid-column:1/-1;"><button class="btn btn-primary" type="submit">Create User</button></div>
+            <div style="grid-column:1/-1;"><button class="btn btn-primary" type="submit"><?= has_full_access_user() ? 'Create User / Admin' : 'Create User' ?></button></div>
         </form>
     </section>
 
@@ -139,12 +192,12 @@ require_once __DIR__ . '/../includes/header.php';
                             <form method="post" action="" style="display:inline-block;">
                                 <input type="hidden" name="member_id" value="<?= (int)$member['id'] ?>">
                                 <input type="hidden" name="action" value="approve">
-                                <button class="btn btn-secondary" type="submit">Approve</button>
+                                <button class="btn btn-secondary" type="submit" onclick="return confirm('Do you really want to approve this member?');">Approve</button>
                             </form>
                             <form method="post" action="" style="display:inline-block;">
                                 <input type="hidden" name="member_id" value="<?= (int)$member['id'] ?>">
                                 <input type="hidden" name="action" value="reject">
-                                <button class="btn" style="background:#fee2e2;color:#991b1b;" type="submit">Reject</button>
+                                <button class="btn" style="background:#fee2e2;color:#991b1b;" type="submit" onclick="return confirm('Do you really want to reject this member?');">Reject</button>
                             </form>
                         </td>
                     </tr>
