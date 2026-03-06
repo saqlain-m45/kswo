@@ -271,6 +271,19 @@ input[type='submit'] {
     flex-wrap: wrap;
 }
 
+.payment-accounts-page .payment-accounts-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.payment-accounts-page .payment-accounts-table th,
+.payment-accounts-page .payment-accounts-table td {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+}
+
 .service-card {
     min-height: 190px;
 }
@@ -612,6 +625,9 @@ th {
     .payment-accounts-page .payment-accounts-table th,
     .payment-accounts-page .payment-accounts-table td {
         padding: 0.65rem;
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: anywhere;
     }
 
     .payment-accounts-page .payment-table-actions {
