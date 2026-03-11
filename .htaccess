@@ -1,14 +1,12 @@
 RewriteEngine On
 
-# Route /admin to admin/login.php
-RewriteRule ^admin/?$ admin/login.php [L]
+# Ensure proper URL resolution by physically redirecting to the login files
+RewriteRule ^admin/?$ /admin/login.php [R=301,L]
+RewriteRule ^superadmin/?$ /superadmin/login.php [R=301,L]
 
-# Route /superadmin to superadmin/login.php
-RewriteRule ^superadmin/?$ superadmin/login.php [L]
-
-# Redirect legacy login and register to join.php
-RewriteRule ^login\.php$ join.php?tab=login [R=301,L]
-RewriteRule ^register\.php$ join.php?tab=register [R=301,L]
+# Redirect legacy root login and register to join.php
+RewriteRule ^login\.php$ /join.php?tab=login [R=301,L]
+RewriteRule ^register\.php$ /join.php?tab=register [R=301,L]
 
 # Prevent directory listing
 Options -Indexes
