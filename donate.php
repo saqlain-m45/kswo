@@ -175,20 +175,37 @@ elseif ($step == 2): ?>
                     </div>
                     <form action="donate.php?step=2" method="POST">
                         <div class="mb-4">
-                            <div class="form-check card p-4 mb-3 cursor-pointer border-0 shadow-sm payment-card">
-                                <input class="form-check-input" type="radio" name="method" value="Easypaisa" id="epa"
-                                    checked>
+                            <div class="form-check card p-4 cursor-pointer border-0 shadow-sm payment-card" id="epa-card">
+                                <input class="form-check-input" type="radio" name="method" value="Easypaisa" id="epa" checked>
                                 <label class="form-check-label d-flex justify-content-between w-100" for="epa">
-                                    <span class="fw-bold">Easypaisa</span>
-                                    <span class="text-primary fw-bold">0300-1234567</span>
+                                    <span class="fw-bold"><i class="fas fa-mobile-alt me-2 text-success"></i>Easypaisa</span>
+                                    <span class="badge bg-success rounded-pill px-3 py-2">Selected</span>
                                 </label>
                             </div>
-                            <div class="form-check card p-4 cursor-pointer border-0 shadow-sm payment-card">
-                                <input class="form-check-input" type="radio" name="method" value="JazzCash" id="jca">
-                                <label class="form-check-label d-flex justify-content-between w-100" for="jca">
-                                    <span class="fw-bold">JazzCash</span>
-                                    <span class="text-danger fw-bold">0311-7654321</span>
-                                </label>
+
+                            <!-- Easypaisa Account Details (shown when selected) -->
+                            <div id="epa-details" class="mt-3 p-4 rounded-4" style="background: rgba(40,167,69,0.07); border: 1.5px solid rgba(40,167,69,0.25);">
+                                <p class="fw-bold text-success mb-3 small text-uppercase" style="letter-spacing:1px;"><i class="fas fa-university me-2"></i>Account Details</p>
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                            <span class="text-muted small fw-bold">IBAN</span>
+                                            <span class="fw-bold text-dark" style="font-size:0.9rem;">PK06TMFB0000000085665779</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                            <span class="text-muted small fw-bold">Account No.</span>
+                                            <span class="fw-bold text-dark">03489402990</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center py-2">
+                                            <span class="text-muted small fw-bold">Account Title</span>
+                                            <span class="fw-bold text-dark">Zaryab Hussain</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <button type="submit" name="step2"
