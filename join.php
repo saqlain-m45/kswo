@@ -39,15 +39,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['register'])) {
             }
             else {
                 $profile_pic_path = null;
+                $cnic_pic_path = null;
+                $student_card_pic_path = null;
+
+                $upload_dir = 'uploads/profiles/';
+                if (!is_dir($upload_dir))
+                    mkdir($upload_dir, 0777, true);
+
+                $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+
+                // Handle Profile Pic
                 if (isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error'] == 0) {
-                    $upload_dir = 'uploads/profiles/';
-                    if (!is_dir($upload_dir))
-                        mkdir($upload_dir, 0777, true);
-
-                    $filename = $_FILES['profile_pic']['name'];
-                    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                    $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-
+                    $ext = strtolower(pathinfo($_FILES['profile_pic']['name'], PATHINFO_EXTENSION));
                     if (in_array($ext, $allowed)) {
                         $new_filename = uniqid('profile_', true) . '.' . $ext;
                         if (move_uploaded_file($_FILES['profile_pic']['tmp_name'], $upload_dir . $new_filename)) {
@@ -56,9 +59,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['register'])) {
                     }
                 }
 
+                // Handle CNIC Pic
+                if (isset($_FILES['cnic_pic']) && $_FILES['cnic_pic']['error'] == 0) {
+                    $ext = strtolower(pathinfo($_FILES['cnic_pic']['name'], PATHINFO_EXTENSION));
+                    if (in_array($ext, $allowed)) {
+                        $new_filename = uniqid('cnic_', true) . '.' . $ext;
+                        if (move_uploaded_file($_FILES['cnic_pic']['tmp_name'], $upload_dir . $new_filename)) {
+                            $cnic_pic_path = $upload_dir . $new_filename;
+                        }
+                    }
+                }
+
+                // Handle Student Card Pic
+                if (isset($_FILES['student_card_pic']) && $_FILES['student_card_pic']['error'] == 0) {
+                    $ext = strtolower(pathinfo($_FILES['student_card_pic']['name'], PATHINFO_EXTENSION));
+                    if (in_array($ext, $allowed)) {
+                        $new_filename = uniqid('card_', true) . '.' . $ext;
+                        if (move_uploaded_file($_FILES['student_card_pic']['tmp_name'], $upload_dir . $new_filename)) {
+                            $student_card_pic_path = $upload_dir . $new_filename;
+                        }
+                    }
+                }
+
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("INSERT INTO users (name, father_name, gender, ethnicity, dob, cnic, phone, email, password, profile_pic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                if ($stmt->execute([$name, $father_name, $gender, $ethnicity, $dob, $cnic, $phone, $email, $hashed_password, $profile_pic_path])) {
+                $stmt = $pdo->prepare("INSERT INTO users (name, father_name, gender, ethnicity, dob, cnic, phone, email, password, profile_pic, cnic_pic, student_card_pic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                if ($stmt->execute([$name, $father_name, $gender, $ethnicity, $dob, $cnic, $phone, $email, $hashed_password, $profile_pic_path, $cnic_pic_path, $student_card_pic_path])) {
                     $success = "Registration successful! You can now login.";
                     $active_tab = 'login';
                 }
@@ -264,6 +289,19 @@ endif; ?>
                                             Number</label>
                                         <input type="text" name="cnic" class="form-control-premium"
                                             placeholder="00000-0000000-0" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-uppercase text-muted ms-1 mb-2">CNIC
+                                            Front Picture</label>
+                                        <input type="file" name="cnic_pic" class="form-control-premium bg-white p-2"
+                                            accept="image/*" required>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label
+                                            class="form-label small fw-bold text-uppercase text-muted ms-1 mb-2">Student
+                                            Card OR Last Semester Challan</label>
+                                        <input type="file" name="student_card_pic"
+                                            class="form-control-premium bg-white p-2" accept="image/*" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label

@@ -161,11 +161,31 @@ $users = $stmt->fetchAll();
                                     </td>
                                     <td class="text-center">
                                         <span
-                                            class="badge rounded-pill <?php echo 'badge-' . $u['status']; ?> px-3 py-2">
+                                            class="badge rounded-pill <?php echo 'badge-' . $u['status']; ?> px-3 py-2 mb-2 d-inline-block">
                                             <?php echo ucfirst($u['status']); ?>
                                         </span>
+                                        <div class="d-flex flex-column align-items-center gap-1">
+                                            <?php if (!empty($u['cnic_pic'])): ?>
+                                            <button class="btn btn-outline-primary btn-sm rounded-pill"
+                                                style="font-size: 0.7rem;" data-bs-toggle="modal"
+                                                data-bs-target="#docModal"
+                                                onclick="showDocument('../<?php echo htmlspecialchars($u['cnic_pic']); ?>', 'CNIC Front')">
+                                                <i class="fas fa-id-card me-1"></i> View CNIC
+                                            </button>
+                                            <?php
+    endif; ?>
+                                            <?php if (!empty($u['student_card_pic'])): ?>
+                                            <button class="btn btn-outline-info btn-sm rounded-pill"
+                                                style="font-size: 0.7rem;" data-bs-toggle="modal"
+                                                data-bs-target="#docModal"
+                                                onclick="showDocument('../<?php echo htmlspecialchars($u['student_card_pic']); ?>', 'Student ID / Challan')">
+                                                <i class="fas fa-graduation-cap me-1"></i> View ID Card
+                                            </button>
+                                            <?php
+    endif; ?>
+                                        </div>
                                     </td>
-                                    <td class="px-3 text-end">
+                                    <td class="px-3 text-end align-top">
                                         <?php if ($u['status'] == 'pending'): ?>
                                         <div class="dropdown">
                                             <button class="btn btn-light btn-sm rounded-circle"
@@ -204,8 +224,31 @@ endforeach; ?>
         </div>
     </div>
 
+    <!-- Document Viewer Modal -->
+    <div class="modal fade" id="docModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-premium"
+                style="border-radius: 20px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="docModalTitle">Document Viewer</h5>
+                    <button type="button" class="btn-close bg-light rounded-circle p-2" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <img id="docModalImage" src="" alt="Document" class="img-fluid rounded-3 shadow-sm"
+                        style="max-height: 70vh; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function showDocument(imageSrc, title) {
+            document.getElementById('docModalImage').src = imageSrc;
+            document.getElementById('docModalTitle').innerText = title;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const reveals = document.querySelectorAll('.reveal');
             const revealOnScroll = () => {
