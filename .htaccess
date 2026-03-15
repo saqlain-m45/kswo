@@ -1,8 +1,14 @@
 RewriteEngine On
 
-# Use relative paths to support both local subdirectories and live domains
-RewriteRule ^admin/?$ admin/login.php [R=301,L]
-RewriteRule ^superadmin/?$ superadmin/login.php [R=301,L]
+# Automatically detect the base directory
+RewriteRule ^ - [E=REWRITEBASE:/]
+<If "%{REQUEST_URI} =~ m#^/KSWOP/#">
+    RewriteBase /KSWOP/
+</If>
+
+# Route /admin to admin/login.php (Internal rewrite to avoid path loss)
+RewriteRule ^admin/?$ admin/login.php [L]
+RewriteRule ^superadmin/?$ superadmin/login.php [L]
 
 # Redirect legacy root login and register to join.php
 RewriteRule ^login\.php$ join.php?tab=login [R=301,L]
